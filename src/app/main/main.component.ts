@@ -2,14 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth.service';
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: 'Pending' | 'In Progress' | 'Completed';
-  date: string;
-}
+import { TaskService, Task } from '../task.service';
 
 @Component({
   selector: 'app-main',
@@ -26,20 +19,17 @@ export class MainComponent {
   searchQuery = '';
   filterStatus = 'All';
   editingId: number | null = null;
+  defaultTaskStatus: Task['status'] = 'Pending';
 
   newTask = { title: '', description: '', status: 'Pending' as Task['status'], date: '' };
+  tasks: Task[] = [];
 
-  tasks: Task[] = [
-    { id: 1, title: 'Design Homepage', description: 'Create a modern and responsive homepage design.', status: 'Pending', date: '22 May 2025' },
-    { id: 2, title: 'API Integration', description: 'Integrate the backend APIs and handle errors.', status: 'In Progress', date: '25 May 2025' },
-    { id: 3, title: 'Testing & Bug Fixing', description: 'Test all features and fix the bugs before deployment.', status: 'Completed', date: '30 May 2025' },
-  ];
-
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(private auth: AuthService, private router: Router, private taskService: TaskService) {
     this.userName = this.auth.getUser();
     if (!this.userName) {
       this.router.navigate(['/login']);
     }
+    this.tasks = this.taskService.getAll();
   }
 
   get filteredTasks(): Task[] {
@@ -50,9 +40,23 @@ export class MainComponent {
     });
   }
 
+  get recentTasks(): Task[] {
+    return [...this.tasks].reverse().slice(0, 5);
+  }
+
+  get completionPercent(): number {
+    if (!this.tasks.length) return 0;
+    return Math.round((this.completedCount / this.tasks.length) * 100);
+  }
+
+  get totalTasks() { return this.tasks.length; }
+  get completedCount() { return this.tasks.filter(t => t.status === 'Completed').length; }
+  get inProgressCount() { return this.tasks.filter(t => t.status === 'In Progress').length; }
+  get pendingCount() { return this.tasks.filter(t => t.status === 'Pending').length; }
+
   openAddModal() {
     this.editingId = null;
-    this.newTask = { title: '', description: '', status: 'Pending', date: '' };
+    this.newTask = { title: '', description: '', status: this.defaultTaskStatus, date: '' };
     this.showModal = true;
   }
 
@@ -68,19 +72,22 @@ export class MainComponent {
     const dateStr = this.newTask.date || today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
     if (this.editingId !== null) {
-      const idx = this.tasks.findIndex(t => t.id === this.editingId);
-      if (idx !== -1) {
-        this.tasks[idx] = { id: this.editingId, title: this.newTask.title, description: this.newTask.description, status: this.newTask.status, date: dateStr };
-      }
+      this.taskService.update(this.editingId, { ...this.newTask, date: dateStr });
     } else {
-      const newId = this.tasks.length ? Math.max(...this.tasks.map(t => t.id)) + 1 : 1;
-      this.tasks.push({ id: newId, title: this.newTask.title, description: this.newTask.description, status: this.newTask.status, date: dateStr });
+      this.taskService.add({ ...this.newTask, date: dateStr });
     }
+    this.tasks = this.taskService.getAll();
     this.showModal = false;
   }
 
   deleteTask(id: number) {
-    this.tasks = this.tasks.filter(t => t.id !== id);
+    this.taskService.delete(id);
+    this.tasks = this.taskService.getAll();
+  }
+
+  clearAllTasks() {
+    this.taskService.clearAll();
+    this.tasks = [];
   }
 
   statusColor(status: string): string {
@@ -88,11 +95,6 @@ export class MainComponent {
     if (status === 'In Progress') return 'blue';
     return 'green';
   }
-
-  get totalTasks() { return this.tasks.length; }
-  get completedCount() { return this.tasks.filter(t => t.status === 'Completed').length; }
-  get inProgressCount() { return this.tasks.filter(t => t.status === 'In Progress').length; }
-  get pendingCount() { return this.tasks.filter(t => t.status === 'Pending').length; }
 
   logout() {
     this.auth.logout();

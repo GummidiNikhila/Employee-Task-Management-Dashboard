@@ -43,53 +43,192 @@
       </button>
     </aside>
 
-    <!-- White Content Area -->
+    <!-- Content Area -->
     <div class="content" [class.dark-content]="darkMode">
 
-      <!-- Toolbar: Search + Filter + Add Task -->
-      <div class="toolbar">
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search Task" [(ngModel)]="searchQuery" />
-        </div>
-        <select class="filter-select" [(ngModel)]="filterStatus">
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-        </select>
-        <button class="add-btn" (click)="openAddModal()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Task
-        </button>
-      </div>
+      <!-- ── DASHBOARD VIEW ── -->
+      @if (activeView === 'Dashboard') {
+        <div class="dashboard-content">
+          <div class="welcome-section">
+            <h2 class="welcome-title">Welcome back, {{ userName }}!</h2>
+            <p class="welcome-sub">Here is an overview of your tasks.</p>
+          </div>
 
-      <!-- Task Cards -->
-      <div class="cards-grid">
-        @for (task of filteredTasks; track task.id) {
-          <div class="task-card border-{{ statusColor(task.status) }}">
-            <h3 class="task-title">{{ task.title }}</h3>
-            <p class="task-desc">{{ task.description }}</p>
-            <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
-            <div class="task-footer">
-              <span class="task-date">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                {{ task.date }}
-              </span>
-              <div class="task-actions">
-                <button class="act-btn del" (click)="deleteTask(task.id)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                </button>
-                <button class="act-btn edt" (click)="editTask(task)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrap stat-icon-total">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ totalTasks }}</div>
+                <div class="stat-label">Total Tasks</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap stat-icon-pending">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ pendingCount }}</div>
+                <div class="stat-label">Pending</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap stat-icon-progress">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ inProgressCount }}</div>
+                <div class="stat-label">In Progress</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap stat-icon-completed">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ completedCount }}</div>
+                <div class="stat-label">Completed</div>
               </div>
             </div>
           </div>
-        } @empty {
-          <div class="empty-state">No tasks found.</div>
-        }
-      </div>
+
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Overall Completion</span>
+              <span class="progress-pct">{{ completionPercent }}%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" [style.width.%]="completionPercent"></div>
+            </div>
+          </div>
+
+          <div class="recent-section">
+            <h3 class="section-title">Recent Tasks</h3>
+            <div class="recent-list">
+              @for (task of recentTasks; track task.id) {
+                <div class="recent-item">
+                  <span class="recent-dot dot-{{ statusColor(task.status) }}"></span>
+                  <div class="recent-info">
+                    <span class="recent-title">{{ task.title }}</span>
+                    <span class="recent-date">{{ task.date }}</span>
+                  </div>
+                  <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
+                </div>
+              } @empty {
+                <div class="empty-state">No tasks yet. Go to Tasks to add one.</div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── TASKS VIEW ── -->
+      @if (activeView === 'Tasks') {
+        <div class="toolbar">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search Task" [(ngModel)]="searchQuery" />
+          </div>
+          <select class="filter-select" [(ngModel)]="filterStatus">
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button class="add-btn" (click)="openAddModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Task
+          </button>
+        </div>
+
+        <div class="cards-grid">
+          @for (task of filteredTasks; track task.id) {
+            <div class="task-card border-{{ statusColor(task.status) }}">
+              <h3 class="task-title">{{ task.title }}</h3>
+              <p class="task-desc">{{ task.description }}</p>
+              <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
+              <div class="task-footer">
+                <span class="task-date">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ task.date }}
+                </span>
+                <div class="task-actions">
+                  <button class="act-btn del" (click)="deleteTask(task.id)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                  <button class="act-btn edt" (click)="editTask(task)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-state">No tasks found.</div>
+          }
+        </div>
+      }
+
+      <!-- ── SETTINGS VIEW ── -->
+      @if (activeView === 'Settings') {
+        <div class="settings-content">
+          <h2 class="settings-page-title">Settings</h2>
+
+          <div class="settings-card">
+            <h3 class="settings-card-title">Profile</h3>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Display Name</span>
+                <span class="settings-row-hint">Your name shown across the dashboard</span>
+              </div>
+              <span class="settings-row-value">{{ userName }}</span>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="settings-card-title">Appearance</h3>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Dark Mode</span>
+                <span class="settings-row-hint">Toggle between light and dark theme</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="darkMode" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="settings-card-title">Task Preferences</h3>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Default Task Status</span>
+                <span class="settings-row-hint">Pre-selected status when adding a new task</span>
+              </div>
+              <select class="settings-select" [(ngModel)]="defaultTaskStatus">
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h3 class="settings-card-title">Data Management</h3>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Clear All Tasks</span>
+                <span class="settings-row-hint">Permanently delete every task from the dashboard</span>
+              </div>
+              <button class="danger-btn" (click)="clearAllTasks()">Clear All</button>
+            </div>
+          </div>
+        </div>
+      }
 
       <footer class="footer">© 2025 Task Dashboard. All rights reserved.</footer>
     </div>
