@@ -1,0 +1,117 @@
+<div class="wrapper">
+
+  <!-- Top Navbar -->
+  <nav class="topnav">
+    <div class="topnav-left">
+      <button class="hamburger" (click)="sidebarOpen = !sidebarOpen">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="brand">Task Dashboard</span>
+    </div>
+    <button class="theme-toggle" (click)="darkMode = !darkMode">
+      ☀ Dark/Light
+    </button>
+  </nav>
+
+  <div class="body-area">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" [class.sidebar-hidden]="!sidebarOpen">
+      <ul class="menu">
+        <li>
+          <a [class.active]="activeView === 'Dashboard'" (click)="activeView = 'Dashboard'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a [class.active]="activeView === 'Tasks'" (click)="activeView = 'Tasks'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Tasks
+          </a>
+        </li>
+        <li>
+          <a [class.active]="activeView === 'Settings'" (click)="activeView = 'Settings'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+          </a>
+        </li>
+      </ul>
+      <button class="logout-btn" (click)="logout()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </aside>
+
+    <!-- White Content Area -->
+    <div class="content" [class.dark-content]="darkMode">
+
+      <!-- Toolbar: Search + Filter + Add Task -->
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search Task" [(ngModel)]="searchQuery" />
+        </div>
+        <select class="filter-select" [(ngModel)]="filterStatus">
+          <option value="All">All</option>
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+        <button class="add-btn" (click)="openAddModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Task
+        </button>
+      </div>
+
+      <!-- Task Cards -->
+      <div class="cards-grid">
+        @for (task of filteredTasks; track task.id) {
+          <div class="task-card border-{{ statusColor(task.status) }}">
+            <h3 class="task-title">{{ task.title }}</h3>
+            <p class="task-desc">{{ task.description }}</p>
+            <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
+            <div class="task-footer">
+              <span class="task-date">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {{ task.date }}
+              </span>
+              <div class="task-actions">
+                <button class="act-btn del" (click)="deleteTask(task.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+                <button class="act-btn edt" (click)="editTask(task)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">No tasks found.</div>
+        }
+      </div>
+
+      <footer class="footer">© 2025 Task Dashboard. All rights reserved.</footer>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+@if (showModal) {
+  <div class="modal-overlay" (click)="showModal = false">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingId !== null ? 'Edit Task' : 'Add Task' }}</h3>
+        <button class="modal-close" (click)="showModal = false">✕</button>
+      </div>
+      <input class="modal-input" type="text" placeholder="Task Title" [(ngModel)]="newTask.title" />
+      <textarea class="modal-textarea" placeholder="Description" [(ngModel)]="newTask.description"></textarea>
+      <select class="modal-select" [(ngModel)]="newTask.status">
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <button class="save-btn" (click)="saveTask()">Save Task</button>
+    </div>
+  </div>
+}
