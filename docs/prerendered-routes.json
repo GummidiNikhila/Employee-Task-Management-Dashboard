@@ -1,0 +1,7 @@
+{
+  "routes": {
+    "/Employee-Task-Management-Dashboard": {},
+    "/Employee-Task-Management-Dashboard/login": {},
+    "/Employee-Task-Management-Dashboard/main": {}
+  }
+}

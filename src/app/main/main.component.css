@@ -195,15 +195,6 @@
 }
 .nav-badge.blue { background: rgba(99,102,241,.3); color: #a5b4fc; }
 
-.overdue-alert {
-  display: flex; align-items: center; gap: 8px;
-  margin-top: 8px; padding: 9px 12px;
-  background: rgba(239,68,68,.12);
-  border: 1px solid rgba(239,68,68,.25);
-  border-radius: 8px;
-  color: #f87171; font-size: 12px; font-weight: 600;
-  cursor: pointer;
-}
 
 .logout-btn {
   display: flex; align-items: center; gap: 10px;
@@ -442,87 +433,10 @@
   from { stroke-dashoffset: 226.2; }
 }
 
-/* ── Stats bar (unified card) ────────────────────────────── */
-.stats-bar-card {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  display: flex; align-items: stretch; overflow: hidden;
-}
-
-.sbc-item {
-  flex: 1; display: flex; flex-direction: column; gap: 8px;
-  padding: 18px 22px; cursor: pointer;
-  border: none; background: transparent;
-  text-align: left; font-family: inherit;
-  position: relative; transition: background .15s;
-}
-.sbc-item::after {
-  content: ''; position: absolute;
-  bottom: 0; left: 0; right: 0; height: 3px;
-}
-.sbc-item:hover { background: var(--card-hover); }
-.sbc-item.sbc-active { background: var(--input-bg); }
-
-.sbc-sep { width: 1px; background: var(--border); flex-shrink: 0; }
-
-.sbc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.sbc-num { font-size: 28px; font-weight: 800; line-height: 1; }
-.sbc-lbl { font-size: 12px; color: var(--text-3); font-weight: 500; }
-
-.sbc-icon {
-  width: 34px; height: 34px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
+/* ── Pulse animation (used by overdue dot) ───────────────── */
 .sbc-pulse { animation: pulseDot 1.4s ease-in-out infinite; }
 
-.sbc-track { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.sbc-fill  { height: 100%; border-radius: 99px; transition: width .6s ease; }
-
-.sbc-pending::after  { background: #f59e0b; }
-.sbc-pending .sbc-num  { color: #d97706; }
-.sbc-pending .sbc-icon { background: #fef3c7; color: #d97706; }
-.sbc-pending .sbc-fill { background: #f59e0b; }
-
-.sbc-progress::after { background: #0284c7; }
-.sbc-progress .sbc-num  { color: #0369a1; }
-.sbc-progress .sbc-icon { background: #e0f2fe; color: #0284c7; }
-.sbc-progress .sbc-fill { background: #0284c7; }
-
-.sbc-done::after  { background: #10b981; }
-.sbc-done .sbc-num  { color: #059669; }
-.sbc-done .sbc-icon { background: #d1fae5; color: #059669; }
-.sbc-done .sbc-fill { background: #10b981; }
-
-.sbc-overdue::after { background: #ef4444; }
-.sbc-overdue .sbc-num  { color: #dc2626; }
-.sbc-overdue .sbc-icon { background: #fee2e2; color: #dc2626; }
-
-.sbc-reset {
-  display: flex; align-items: center; gap: 7px;
-  padding: 0 22px; background: var(--input-bg);
-  border: none; border-left: 1px solid var(--border);
-  font-size: 12px; font-weight: 600; color: var(--text-3);
-  cursor: pointer; font-family: inherit; white-space: nowrap;
-  flex-shrink: 0; transition: background .15s, color .15s;
-}
-.sbc-reset:hover { background: var(--border); color: var(--text-1); }
-
-.dark .sbc-pending .sbc-icon  { background: rgba(245,158,11,.15); }
-.dark .sbc-progress .sbc-icon { background: rgba(2,132,199,.15);  }
-.dark .sbc-done .sbc-icon     { background: rgba(16,185,129,.15); }
-.dark .sbc-overdue .sbc-icon  { background: rgba(239,68,68,.15);  }
-
-/* ── Toolbar ─────────────────────────────────────────────── */
-.toolbar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  box-shadow: var(--shadow-sm);
-  border: 1.5px solid var(--border);
-}
+/* ── Search box (shared) ─────────────────────────────────── */
 .search-box {
   display: flex; align-items: center; gap: 8px;
   background: var(--card); border: 1.5px solid var(--border);
@@ -537,19 +451,6 @@
   font-family: inherit;
 }
 .search-box input::placeholder { color: var(--text-3); }
-
-.select-pill {
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: 9px; padding: 9px 32px 9px 12px;
-  font-size: 13px; color: var(--text-2);
-  outline: none; cursor: pointer; font-family: inherit;
-  transition: border-color .2s;
-  appearance: none; -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
-.select-pill:focus { border-color: var(--primary); }
 
 /* ── Task grid ───────────────────────────────────────────── */
 .task-grid {
@@ -979,77 +880,6 @@
 .task-title-done {
   text-decoration: line-through;
   color: var(--text-3) !important;
-}
-
-/* ── List view ───────────────────────────────────────────── */
-.task-list { display: flex; flex-direction: column; gap: 5px; }
-
-.task-list-header {
-  display: flex; align-items: center; gap: 14px;
-  padding: 6px 16px 6px 22px;
-  font-size: 11px; font-weight: 700;
-  color: var(--text-3); text-transform: uppercase; letter-spacing: .09em;
-}
-.tlh-task     { flex: 1; }
-.tlh-assignee { width: 148px; flex-shrink: 0; }
-.tlh-status   { width: 118px; flex-shrink: 0; }
-.tlh-priority { width: 80px;  flex-shrink: 0; }
-.tlh-date     { width: 128px; flex-shrink: 0; }
-.tlh-actions  { width: 66px;  flex-shrink: 0; }
-
-.task-row {
-  background: var(--card); border-radius: 10px;
-  padding: 12px 16px 12px 16px;
-  display: flex; align-items: center; gap: 14px;
-  box-shadow: var(--shadow-sm);
-  border: 1.5px solid var(--border);
-  border-left-width: 4px;
-  animation: fadeSlideIn 0.32s ease both;
-  transition: box-shadow .2s, transform .1s;
-}
-.task-row:hover { box-shadow: var(--shadow-md); transform: translateX(3px); }
-.task-row.priority-high   { border-left-color: #ef4444; }
-.task-row.priority-medium { border-left-color: #f59e0b; }
-.task-row.priority-low    { border-left-color: #94a3b8; }
-.task-row.completed-task  { opacity: 0.68; }
-.task-row.overdue-card    { border-color: #fca5a5; background: #fff5f5; }
-.dark .task-row.overdue-card { border-color: #7f1d1d; background: #1c0a0a; }
-
-.task-row-main {
-  flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;
-}
-.task-row-title {
-  font-size: 14px; font-weight: 600; color: var(--text-1);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.task-row-desc {
-  font-size: 12px; color: var(--text-3);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.task-row-assignee {
-  width: 148px; flex-shrink: 0;
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--text-2);
-  min-width: 0;
-}
-.task-row-name {
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.task-row-status   { width: 118px; flex-shrink: 0; display: flex; align-items: center; }
-.task-row-priority { width: 80px;  flex-shrink: 0; display: flex; align-items: center; }
-.task-row-date     { width: 128px; flex-shrink: 0; display: flex; align-items: center; }
-.no-date { font-size: 13px; color: var(--text-3); }
-
-/* Collapse list columns on narrow screens */
-@media (max-width: 1100px) {
-  .task-list-header { display: none; }
-  .task-row { flex-wrap: wrap; }
-  .task-row-main { width: 100%; flex: none; }
-  .task-row-assignee,
-  .task-row-status,
-  .task-row-priority,
-  .task-row-date     { width: auto; flex-shrink: 1; }
-  .task-row .task-actions { margin-left: auto; }
 }
 
 /* ── Kanban board ────────────────────────────────────────── */
