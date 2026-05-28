@@ -1,37 +1,52 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface Task {
   id: number;
   title: string;
   description: string;
   status: 'Pending' | 'In Progress' | 'Completed';
-  date: string;
+  priority: 'High' | 'Medium' | 'Low';
+  assignee: string;
+  date: string; // YYYY-MM-DD
 }
 
 const STORAGE_KEY = 'etm_tasks';
-
-const DEFAULT_TASKS: Task[] = [
-  { id: 1, title: 'Design Homepage', description: 'Create a modern and responsive homepage design.', status: 'Pending', date: '22 May 2025' },
-  { id: 2, title: 'API Integration', description: 'Integrate the backend APIs and handle errors.', status: 'In Progress', date: '25 May 2025' },
-  { id: 3, title: 'Testing & Bug Fixing', description: 'Test all features and fix the bugs before deployment.', status: 'Completed', date: '30 May 2025' },
-];
+const VERSION_KEY  = 'etm_version';
+const CURRENT_VER  = '2';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
   private tasks: Task[] = [];
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
+    if (!this.isBrowser) return;
+
+    // Version bump clears old seeded demo data so new users start blank.
+    if (localStorage.getItem(VERSION_KEY) !== CURRENT_VER) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(VERSION_KEY, CURRENT_VER);
+    }
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      this.tasks = stored ? JSON.parse(stored) : [...DEFAULT_TASKS];
-      if (!stored) this.persist();
+      if (stored) {
+        const parsed: Task[] = JSON.parse(stored);
+        this.tasks = parsed.map(t => ({
+          ...t,
+          priority: t.priority ?? ('Medium' as Task['priority']),
+          assignee: t.assignee ?? '',
+          date: t.date ?? '',
+        }));
+      }
     } catch {
-      this.tasks = [...DEFAULT_TASKS];
+      this.tasks = [];
     }
   }
 
   private persist(): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.tasks));
+    if (this.isBrowser) localStorage.setItem(STORAGE_KEY, JSON.stringify(this.tasks));
   }
 
   getAll(): Task[] {
@@ -59,6 +74,6 @@ export class TaskService {
 
   clearAll(): void {
     this.tasks = [];
-    localStorage.removeItem(STORAGE_KEY);
+    if (this.isBrowser) localStorage.removeItem(STORAGE_KEY);
   }
 }

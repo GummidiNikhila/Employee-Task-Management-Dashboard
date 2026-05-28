@@ -1,256 +1,907 @@
-<div class="wrapper">
+<div class="app" [class.dark]="darkMode">
 
-  <!-- Top Navbar -->
-  <nav class="topnav">
-    <div class="topnav-left">
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar">
+    <div class="nav-left">
       <button class="hamburger" (click)="sidebarOpen = !sidebarOpen">
         <span></span><span></span><span></span>
       </button>
-      <span class="brand">Task Dashboard</span>
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        TeamTrack
+      </div>
     </div>
-    <button class="theme-toggle" (click)="darkMode = !darkMode">
-      ☀ Dark/Light
-    </button>
+
+    <div class="nav-right">
+      <!-- Notifications -->
+      <div class="notif-wrap">
+        <button class="nav-icon-btn" (click)="showNotifPanel = !showNotifPanel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          @if (overdueCount > 0) {
+            <span class="notif-badge">{{ overdueCount }}</span>
+          }
+        </button>
+        @if (showNotifPanel) {
+          <div class="notif-panel">
+            <div class="notif-panel-header">
+              <span>Overdue Tasks</span>
+              <button class="notif-close" (click)="showNotifPanel = false">✕</button>
+            </div>
+            @if (overdueNotifications.length === 0) {
+              <p class="notif-empty">All tasks are on track!</p>
+            }
+            @for (t of overdueNotifications; track t.id) {
+              <div class="notif-item" (click)="activeView = 'Tasks'; showNotifPanel = false">
+                <div class="notif-dot"></div>
+                <div class="notif-info">
+                  <span class="notif-title">{{ t.title }}</span>
+                  <span class="notif-date">Due {{ formatDate(t.date) }}</span>
+                </div>
+                <span class="priority-tag tag-{{ priorityColor(t.priority) }}">{{ t.priority }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Theme toggle -->
+      <button class="theme-btn" (click)="darkMode = !darkMode">
+        @if (darkMode) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        }
+      </button>
+
+      <!-- User avatar -->
+      <div class="user-chip">
+        <div class="user-ava">{{ userName?.charAt(0)?.toUpperCase() }}</div>
+        <span class="user-name">{{ userName }}</span>
+      </div>
+    </div>
   </nav>
 
-  <div class="body-area">
+  <div class="layout">
 
-    <!-- Sidebar -->
-    <aside class="sidebar" [class.sidebar-hidden]="!sidebarOpen">
-      <ul class="menu">
-        <li>
-          <a [class.active]="activeView === 'Dashboard'" (click)="activeView = 'Dashboard'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Dashboard
-          </a>
-        </li>
-        <li>
-          <a [class.active]="activeView === 'Tasks'" (click)="activeView = 'Tasks'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Tasks
-          </a>
-        </li>
-        <li>
-          <a [class.active]="activeView === 'Settings'" (click)="activeView = 'Settings'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Settings
-          </a>
-        </li>
-      </ul>
+    <!-- Mobile sidebar backdrop -->
+    <div class="sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="sidebar" [class.closed]="!sidebarOpen">
+      <nav class="sidebar-nav">
+
+        <div class="sidebar-group-label">Main</div>
+
+        <a class="nav-item" [class.active]="activeView === 'Dashboard'" (click)="activeView = 'Dashboard'">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span class="nav-label">Dashboard</span>
+        </a>
+
+        <a class="nav-item" [class.active]="activeView === 'Tasks'" (click)="activeView = 'Tasks'">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span class="nav-label">Tasks</span>
+        </a>
+
+        <a class="nav-item" [class.active]="activeView === 'Employees'" (click)="activeView = 'Employees'">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-label">Employees</span>
+        </a>
+
+        <div class="sidebar-group-label">System</div>
+
+        <a class="nav-item" [class.active]="activeView === 'Settings'" (click)="activeView = 'Settings'">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="nav-label">Settings</span>
+        </a>
+
+      </nav>
+
       <button class="logout-btn" (click)="logout()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Logout
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="nav-label">Logout</span>
       </button>
     </aside>
 
-    <!-- Content Area -->
-    <div class="content" [class.dark-content]="darkMode">
+    <!-- ══ MAIN CONTENT ══ -->
+    <main class="main-content">
 
-      <!-- ── DASHBOARD VIEW ── -->
+      <!-- ════ DASHBOARD ════ -->
       @if (activeView === 'Dashboard') {
-        <div class="dashboard-content">
-          <div class="welcome-section">
-            <h2 class="welcome-title">Welcome back, {{ userName }}!</h2>
-            <p class="welcome-sub">Here is an overview of your tasks.</p>
+        <div class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Good {{ timeOfDay }}, {{ userName }} 👋</h1>
+              <p class="page-sub">{{ todayDate }} · Here's what's happening with your team.</p>
+            </div>
+            <button class="btn-primary" (click)="activeView = 'Tasks'; openAddModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Task
+            </button>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-total">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ totalTasks }}</div>
-                <div class="stat-label">Total Tasks</div>
-              </div>
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-card accent-purple">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ totalTasks }}</span><span class="stat-lbl">Total Tasks</span></div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-pending">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ pendingCount }}</div>
-                <div class="stat-label">Pending</div>
-              </div>
+            <div class="stat-card accent-amber">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ pendingCount }}</span><span class="stat-lbl">Pending</span></div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-progress">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ inProgressCount }}</div>
-                <div class="stat-label">In Progress</div>
-              </div>
+            <div class="stat-card accent-blue">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ inProgressCount }}</span><span class="stat-lbl">In Progress</span></div>
             </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap stat-icon-completed">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ completedCount }}</div>
-                <div class="stat-label">Completed</div>
-              </div>
+            <div class="stat-card accent-green">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ completedCount }}</span><span class="stat-lbl">Completed</span></div>
+            </div>
+            <div class="stat-card accent-red">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ highCount }}</span><span class="stat-lbl">High Priority</span></div>
+            </div>
+            <div class="stat-card accent-teal">
+              <div class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="stat-body"><span class="stat-num">{{ employees.length }}</span><span class="stat-lbl">Team Members</span></div>
             </div>
           </div>
 
-          <div class="progress-section">
-            <div class="progress-header">
-              <span class="progress-label">Overall Completion</span>
-              <span class="progress-pct">{{ completionPercent }}%</span>
+          <!-- Completion Ring -->
+          @if (totalTasks > 0) {
+            <div class="card progress-card">
+              <div class="progress-layout">
+                <div class="ring-wrap">
+                  <svg class="ring-svg" viewBox="0 0 88 88">
+                    <circle class="ring-bg" cx="44" cy="44" r="36"/>
+                    <circle class="ring-fg" cx="44" cy="44" r="36"
+                            [style.stroke-dashoffset]="completionRingOffset"/>
+                  </svg>
+                  <div class="ring-label">
+                    <span class="ring-pct">{{ completionPercent }}%</span>
+                    <span class="ring-sub">Done</span>
+                  </div>
+                </div>
+                <div class="progress-details">
+                  <span class="card-label">Overall Completion</span>
+                  <div class="legend-stack">
+                    <div class="legend-item">
+                      <span class="legend-dot dot-amber"></span>
+                      <span class="legend-lbl">Pending</span>
+                      <span class="legend-val">{{ pendingCount }}</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-dot dot-blue"></span>
+                      <span class="legend-lbl">In Progress</span>
+                      <span class="legend-val">{{ inProgressCount }}</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-dot dot-green"></span>
+                      <span class="legend-lbl">Completed</span>
+                      <span class="legend-val">{{ completedCount }}</span>
+                    </div>
+                    @if (dueTodayCount > 0) {
+                      <div class="legend-item">
+                        <span class="legend-dot" style="background:#f59e0b"></span>
+                        <span class="legend-lbl">Due Today</span>
+                        <span class="legend-val today-val">{{ dueTodayCount }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" [style.width.%]="completionPercent"></div>
-            </div>
-          </div>
+          }
 
-          <div class="recent-section">
-            <h3 class="section-title">Recent Tasks</h3>
-            <div class="recent-list">
+          <div class="dash-grid">
+            <!-- Recent Tasks -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-label">Recent Tasks</span>
+                @if (totalTasks > 0) {
+                  <button class="link-btn" (click)="activeView = 'Tasks'">View all →</button>
+                }
+              </div>
+
+              @if (recentTasks.length === 0) {
+                <div class="empty-inline">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                  <p>No tasks yet.</p>
+                  <button class="btn-primary sm" (click)="activeView = 'Tasks'; openAddModal()">Add your first task</button>
+                </div>
+              }
               @for (task of recentTasks; track task.id) {
-                <div class="recent-item">
-                  <span class="recent-dot dot-{{ statusColor(task.status) }}"></span>
+                <div class="recent-row">
+                  <span class="status-dot dot-{{ statusColor(task.status) }}"></span>
                   <div class="recent-info">
                     <span class="recent-title">{{ task.title }}</span>
-                    <span class="recent-date">{{ task.date }}</span>
+                    <span class="recent-meta">
+                      {{ task.assignee || 'Unassigned' }}
+                      @if (task.date) { · <span [class.overdue-text]="isOverdue(task.date)">{{ formatDate(task.date) }}</span> }
+                    </span>
                   </div>
-                  <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
+                  <span class="priority-tag tag-{{ priorityColor(task.priority) }}">{{ task.priority }}</span>
+                  <span class="status-pill pill-{{ statusColor(task.status) }}">{{ task.status }}</span>
                 </div>
-              } @empty {
-                <div class="empty-state">No tasks yet. Go to Tasks to add one.</div>
+              }
+            </div>
+
+            <!-- Team Workload -->
+            <div class="card">
+              <div class="card-head">
+                <span class="card-label">Team Workload</span>
+                <button class="link-btn" (click)="activeView = 'Employees'">Manage →</button>
+              </div>
+              @if (employees.length === 0) {
+                <div class="empty-inline">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  <p>No team members yet.</p>
+                  <button class="btn-primary sm" (click)="activeView = 'Employees'; showEmpModal = true">Add member</button>
+                </div>
+              }
+              @for (emp of employees; track emp.id) {
+                <div class="workload-row">
+                  <div class="avatar-md">{{ initials(emp.name) }}</div>
+                  <div class="workload-body">
+                    <div class="workload-top">
+                      <span class="workload-name">{{ emp.name }}</span>
+                      <span class="workload-count">{{ taskCountFor(emp.name) }} tasks</span>
+                    </div>
+                    <div class="mini-track">
+                      <div class="mini-fill" [style.width.%]="progressFor(emp.name)"></div>
+                    </div>
+                    <span class="workload-role">{{ emp.role }}</span>
+                  </div>
+                </div>
               }
             </div>
           </div>
         </div>
       }
 
-      <!-- ── TASKS VIEW ── -->
+      <!-- ════ TASKS ════ -->
       @if (activeView === 'Tasks') {
-        <div class="toolbar">
-          <div class="search-box">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" placeholder="Search Task" [(ngModel)]="searchQuery" />
-          </div>
-          <select class="filter-select" [(ngModel)]="filterStatus">
-            <option value="All">All</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </select>
-          <button class="add-btn" (click)="openAddModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Task
-          </button>
-        </div>
+        <div class="page ticket-page">
 
-        <div class="cards-grid">
-          @for (task of filteredTasks; track task.id) {
-            <div class="task-card border-{{ statusColor(task.status) }}">
-              <h3 class="task-title">{{ task.title }}</h3>
-              <p class="task-desc">{{ task.description }}</p>
-              <span class="status-badge badge-{{ statusColor(task.status) }}">{{ task.status }}</span>
-              <div class="task-footer">
-                <span class="task-date">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  {{ task.date }}
-                </span>
-                <div class="task-actions">
-                  <button class="act-btn del" (click)="deleteTask(task.id)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                  </button>
-                  <button class="act-btn edt" (click)="editTask(task)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                </div>
-              </div>
+          <!-- Ticket page header -->
+          <div class="ticket-page-header">
+            <div class="ticket-breadcrumb">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              <span>TeamTrack</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="bc-active">Issues</span>
             </div>
-          } @empty {
-            <div class="empty-state">No tasks found.</div>
-          }
-        </div>
-      }
-
-      <!-- ── SETTINGS VIEW ── -->
-      @if (activeView === 'Settings') {
-        <div class="settings-content">
-          <h2 class="settings-page-title">Settings</h2>
-
-          <div class="settings-card">
-            <h3 class="settings-card-title">Profile</h3>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span class="settings-row-name">Display Name</span>
-                <span class="settings-row-hint">Your name shown across the dashboard</span>
+            <div class="ticket-header-right">
+              <div class="view-toggle">
+                <button class="vt-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="List view">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button class="vt-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Board view">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </button>
+                <button class="vt-btn" [class.active]="viewMode === 'kanban'" (click)="viewMode = 'kanban'" title="Kanban view">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="14" rx="1"/><rect x="17" y="3" width="5" height="10" rx="1"/></svg>
+                </button>
               </div>
-              <span class="settings-row-value">{{ userName }}</span>
+              <button class="btn-primary" (click)="openAddModal()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Create Issue
+              </button>
             </div>
           </div>
 
-          <div class="settings-card">
-            <h3 class="settings-card-title">Appearance</h3>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span class="settings-row-name">Dark Mode</span>
-                <span class="settings-row-hint">Toggle between light and dark theme</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" [(ngModel)]="darkMode" />
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
+          <!-- Status tabs (ticketing style) -->
+          <div class="ticket-status-tabs">
+            <button class="tst-tab" [class.tst-active]="filterStatus === 'All'"
+                    (click)="filterStatus = 'All'">
+              All Issues
+              <span class="tst-count">{{ totalTasks }}</span>
+            </button>
+            <button class="tst-tab tst-pending" [class.tst-active]="filterStatus === 'Pending'"
+                    (click)="filterStatus = filterStatus === 'Pending' ? 'All' : 'Pending'">
+              <span class="tst-dot" style="background:#f59e0b"></span>
+              To Do
+              <span class="tst-count">{{ pendingCount }}</span>
+            </button>
+            <button class="tst-tab tst-progress" [class.tst-active]="filterStatus === 'In Progress'"
+                    (click)="filterStatus = filterStatus === 'In Progress' ? 'All' : 'In Progress'">
+              <span class="tst-dot" style="background:#0284c7"></span>
+              In Progress
+              <span class="tst-count">{{ inProgressCount }}</span>
+            </button>
+            <button class="tst-tab tst-done" [class.tst-active]="filterStatus === 'Completed'"
+                    (click)="filterStatus = filterStatus === 'Completed' ? 'All' : 'Completed'">
+              <span class="tst-dot" style="background:#10b981"></span>
+              Done
+              <span class="tst-count">{{ completedCount }}</span>
+            </button>
+            @if (overdueCount > 0) {
+              <button class="tst-tab tst-overdue" (click)="filterStatus = 'Pending'">
+                <span class="tst-dot sbc-pulse" style="background:#ef4444"></span>
+                Overdue
+                <span class="tst-count tst-count-red">{{ overdueCount }}</span>
+              </button>
+            }
+            <div class="tst-spacer"></div>
+            <button class="tst-reset" (click)="filterStatus='All'; filterAssignee='All'; searchQuery=''; filterPriority='All'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reset
+            </button>
           </div>
 
-          <div class="settings-card">
-            <h3 class="settings-card-title">Task Preferences</h3>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span class="settings-row-name">Default Task Status</span>
-                <span class="settings-row-hint">Pre-selected status when adding a new task</span>
-              </div>
-              <select class="settings-select" [(ngModel)]="defaultTaskStatus">
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
+          <!-- Ticket toolbar -->
+          <div class="ticket-toolbar">
+            <div class="search-box ticket-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Search issues…" [(ngModel)]="searchQuery" />
+            </div>
+            <div class="ticket-filters">
+              <select class="tkt-select" [(ngModel)]="filterPriority">
+                <option value="All">Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              <select class="tkt-select" [(ngModel)]="filterAssignee">
+                <option value="All">Assignee</option>
+                @for (name of employeeNames; track name) {
+                  <option [value]="name">{{ name }}</option>
+                }
+              </select>
+              <select class="tkt-select" [(ngModel)]="sortKey">
+                <option value="priority">Sort: Priority</option>
+                <option value="date">Sort: Due Date</option>
+                <option value="title">Sort: Title</option>
+                <option value="status">Sort: Status</option>
               </select>
             </div>
           </div>
 
-          <div class="settings-card">
-            <h3 class="settings-card-title">Data Management</h3>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span class="settings-row-name">Clear All Tasks</span>
-                <span class="settings-row-hint">Permanently delete every task from the dashboard</span>
+          <!-- Active filter chips -->
+          @if (filterStatus !== 'All' || filterPriority !== 'All' || filterAssignee !== 'All' || searchQuery) {
+            <div class="active-filters">
+              <span class="af-label">Active:</span>
+              @if (searchQuery) {
+                <button class="af-chip" (click)="searchQuery = ''">"{{ searchQuery }}" <span class="af-x">✕</span></button>
+              }
+              @if (filterStatus !== 'All') {
+                <button class="af-chip" (click)="filterStatus = 'All'">{{ filterStatus }} <span class="af-x">✕</span></button>
+              }
+              @if (filterPriority !== 'All') {
+                <button class="af-chip" (click)="filterPriority = 'All'">{{ filterPriority }} <span class="af-x">✕</span></button>
+              }
+              @if (filterAssignee !== 'All') {
+                <button class="af-chip" (click)="filterAssignee = 'All'">{{ filterAssignee }} <span class="af-x">✕</span></button>
+              }
+              <button class="af-clear" (click)="searchQuery=''; filterStatus='All'; filterPriority='All'; filterAssignee='All'">Clear all</button>
+            </div>
+          }
+
+          <!-- Empty state -->
+          @if (totalTasks === 0) {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               </div>
-              <button class="danger-btn" (click)="clearAllTasks()">Clear All</button>
+              <h3>No issues yet</h3>
+              <p>Create your first issue to track work across your team.</p>
+              <button class="btn-primary" (click)="openAddModal()">Create first issue</button>
+            </div>
+          } @else if (filteredTasks.length === 0 && viewMode !== 'kanban') {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+              <h3>No results found</h3>
+              <p>Try adjusting your search or filters.</p>
+              <button class="btn-ghost" (click)="searchQuery = ''; filterStatus = 'All'; filterPriority = 'All'; filterAssignee = 'All'">Clear filters</button>
+            </div>
+          } @else {
+
+            <!-- ── List / Ticket Table view ── -->
+            @if (viewMode === 'list') {
+              <div class="ticket-table-wrap">
+                <div class="ticket-table-header">
+                  <span class="tth-type"></span>
+                  <span class="tth-id">Issue</span>
+                  <span class="tth-title">Summary</span>
+                  <span class="tth-status">Status</span>
+                  <span class="tth-assignee">Assignee</span>
+                  <span class="tth-priority">Priority</span>
+                  <span class="tth-date">Due</span>
+                  <span class="tth-actions"></span>
+                </div>
+
+                @for (task of filteredTasks; track task.id; let i = $index) {
+                  <div class="ticket-row"
+                       [class.tr-overdue]="isOverdue(task.date) && task.status !== 'Completed'"
+                       [class.tr-done]="task.status === 'Completed'"
+                       [style.animation-delay]="i * 0.04 + 's'">
+
+                    <!-- Type icon -->
+                    <div class="tr-type">
+                      @if (task.priority === 'High') {
+                        <span class="ticket-type-icon ttype-bug" title="High Priority">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 5 5A5 5 0 0 0 12 2zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm7 4H5a1 1 0 0 0 0 2h3v5a1 1 0 0 0 2 0v-5h4v5a1 1 0 0 0 2 0v-5h3a1 1 0 0 0 0-2z"/></svg>
+                        </span>
+                      } @else if (task.priority === 'Medium') {
+                        <span class="ticket-type-icon ttype-task" title="Task">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        </span>
+                      } @else {
+                        <span class="ticket-type-icon ttype-story" title="Story">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Ticket ID -->
+                    <div class="tr-id">
+                      <span class="ticket-id-label">TM-{{ task.id }}</span>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="tr-title">
+                      <span class="tr-title-text" [class.tr-title-done]="task.status === 'Completed'">{{ task.title }}</span>
+                      @if (task.description) {
+                        <span class="tr-desc">{{ task.description }}</span>
+                      }
+                    </div>
+
+                    <!-- Status -->
+                    <div class="tr-status">
+                      <button class="ticket-status-badge tsb-{{ statusColor(task.status) }}" (click)="cycleStatus(task)" title="Click to advance">
+                        @if (task.status === 'Pending') {
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+                        } @else if (task.status === 'In Progress') {
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        } @else {
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        }
+                        {{ task.status }}
+                      </button>
+                    </div>
+
+                    <!-- Assignee -->
+                    <div class="tr-assignee">
+                      @if (task.assignee) {
+                        <div class="avatar-xs" [style.background]="avatarColor(task.assignee)" [title]="task.assignee">{{ initials(task.assignee) }}</div>
+                        <span class="tr-name">{{ task.assignee.split(' ')[0] }}</span>
+                      } @else {
+                        <span class="tr-unassigned">—</span>
+                      }
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="tr-priority">
+                      <span class="ticket-prio-badge tpb-{{ priorityColor(task.priority) }}">
+                        @if (task.priority === 'High') {
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+                        } @else if (task.priority === 'Medium') {
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M4 15h16v-2H4zm0 4h16v-2H4zm0-8h16V9H4zm0-6v2h16V5z"/></svg>
+                        } @else {
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h16v2H4zm0 4h16v2H4z"/></svg>
+                        }
+                        {{ task.priority }}
+                      </span>
+                    </div>
+
+                    <!-- Due date -->
+                    <div class="tr-date">
+                      @if (task.date) {
+                        <span class="date-badge"
+                              [class.overdue-badge]="isOverdue(task.date) && task.status !== 'Completed'"
+                              [class.today-badge]="isDueToday(task.date)">
+                          {{ relativeDate(task.date) }}
+                        </span>
+                      } @else {
+                        <span class="tr-nodate">—</span>
+                      }
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="tr-actions">
+                      <button class="icon-btn edit-btn" title="Edit" (click)="editTask(task)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="icon-btn del-btn" title="Delete" (click)="deleteTask(task.id)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ── Grid / Card view ── -->
+            @if (viewMode === 'grid') {
+              <div class="task-grid">
+                @for (task of filteredTasks; track task.id; let i = $index) {
+                  <div class="task-card"
+                       [class.overdue-card]="isOverdue(task.date) && task.status !== 'Completed'"
+                       [class.completed-task]="task.status === 'Completed'"
+                       [class.priority-high]="task.priority === 'High'"
+                       [class.priority-medium]="task.priority === 'Medium'"
+                       [class.priority-low]="task.priority === 'Low'"
+                       [style.animation-delay]="i * 0.07 + 's'">
+                    <div class="task-card-top">
+                      <div class="tc-top-left">
+                        <span class="ticket-id-label">TM-{{ task.id }}</span>
+                        <button class="status-pill pill-{{ statusColor(task.status) }}" title="Click to advance" (click)="cycleStatus(task)">
+                          <span class="sp-dot"></span>{{ task.status }}
+                        </button>
+                      </div>
+                      <div class="task-actions">
+                        <button class="icon-btn edit-btn" title="Edit" (click)="editTask(task)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="icon-btn del-btn" title="Delete" (click)="deleteTask(task.id)">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="task-body">
+                      <h3 class="task-title" [class.task-title-done]="task.status === 'Completed'">{{ task.title }}</h3>
+                      @if (task.description) {
+                        <p class="task-desc">{{ task.description }}</p>
+                      }
+                    </div>
+
+                    <div class="task-card-footer">
+                      <div class="task-assignee">
+                        @if (task.assignee) {
+                          <div class="avatar-xs" [style.background]="avatarColor(task.assignee)">{{ initials(task.assignee) }}</div>
+                          <span>{{ task.assignee.split(' ')[0] }}</span>
+                        } @else {
+                          <span class="unassigned">Unassigned</span>
+                        }
+                      </div>
+                      <div class="task-right-meta">
+                        <span class="ticket-prio-badge tpb-{{ priorityColor(task.priority) }}">{{ task.priority }}</span>
+                        @if (task.date) {
+                          <span class="date-badge"
+                                [class.overdue-badge]="isOverdue(task.date) && task.status !== 'Completed'"
+                                [class.today-badge]="isDueToday(task.date)">
+                            {{ relativeDate(task.date) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ── Kanban view ── -->
+            @if (viewMode === 'kanban') {
+              <div class="kanban-wrap">
+                @for (col of kanbanCols; track col.status) {
+                  <div class="kanban-col">
+                    <div class="kanban-col-header {{ col.colorClass }}">
+                      <div class="kch-left">
+                        <span class="kch-dot"></span>
+                        <span class="kch-title">{{ col.label }}</span>
+                        <span class="kch-count">{{ tasksForStatus(col.status).length }}</span>
+                      </div>
+                      <button class="kanban-add-btn" (click)="openAddModal(col.status)" title="Add to {{ col.label }}">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                    </div>
+                    <div class="kanban-cards">
+                      @if (tasksForStatus(col.status).length === 0) {
+                        <div class="kanban-empty">
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
+                          <p>No issues</p>
+                        </div>
+                      }
+                      @for (task of tasksForStatus(col.status); track task.id; let i = $index) {
+                        <div class="kanban-card"
+                             [class.kc-high]="task.priority === 'High'"
+                             [class.kc-medium]="task.priority === 'Medium'"
+                             [class.kc-low]="task.priority === 'Low'"
+                             [class.completed-task]="task.status === 'Completed'"
+                             [style.animation-delay]="i * 0.06 + 's'">
+                          <div class="kc-header">
+                            <span class="ticket-id-label">TM-{{ task.id }}</span>
+                            <div class="kc-actions">
+                              <button class="icon-btn edit-btn" title="Edit" (click)="editTask(task)">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
+                              <button class="icon-btn del-btn" title="Delete" (click)="deleteTask(task.id)">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div class="kc-body">
+                            <h4 class="kc-title" [class.task-title-done]="task.status === 'Completed'">{{ task.title }}</h4>
+                            @if (task.description) {
+                              <p class="kc-desc">{{ task.description }}</p>
+                            }
+                          </div>
+
+                          <div class="kc-footer">
+                            <div class="kc-left">
+                              @if (task.assignee) {
+                                <div class="avatar-xs" [style.background]="avatarColor(task.assignee)" [title]="task.assignee">{{ initials(task.assignee) }}</div>
+                              }
+                              <span class="ticket-prio-badge tpb-{{ priorityColor(task.priority) }}">
+                                {{ task.priority }}
+                              </span>
+                            </div>
+                            @if (task.date) {
+                              <span class="date-badge"
+                                    [class.overdue-badge]="isOverdue(task.date) && task.status !== 'Completed'"
+                                    [class.today-badge]="isDueToday(task.date)">
+                                {{ relativeDate(task.date) }}
+                              </span>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+          }
+        </div>
+      }
+
+      <!-- ════ EMPLOYEES ════ -->
+      @if (activeView === 'Employees') {
+        <div class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Team Members</h1>
+              <p class="page-sub">{{ employees.length }} members · {{ totalTasks }} tasks assigned</p>
+            </div>
+            <button class="btn-primary" (click)="showEmpModal = true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Member
+            </button>
+          </div>
+
+          @if (employees.length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <h3>No team members yet</h3>
+              <p>Add your first team member to start assigning tasks.</p>
+              <button class="btn-primary" (click)="showEmpModal = true">Add first member</button>
+            </div>
+          } @else {
+            <div class="emp-grid">
+              @for (emp of employees; track emp.id) {
+                <div class="emp-card">
+                  <!-- Gradient header band -->
+                  <div class="emp-card-header"
+                       [style.background]="'linear-gradient(135deg,' + avatarColor(emp.name) + ',' + avatarColor(emp.name) + 'aa)'">
+                    <button class="emp-del-btn" (click)="deleteEmployee(emp.id)" title="Remove member">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                    <div class="avatar-emp" [style.background]="avatarColor(emp.name)">{{ initials(emp.name) }}</div>
+                  </div>
+                  <!-- Card body -->
+                  <div class="emp-body">
+                    <div class="emp-info">
+                      <h3 class="emp-name">{{ emp.name }}</h3>
+                      <span class="role-chip">{{ emp.role || 'Team Member' }}</span>
+                      <span class="emp-email">{{ emp.email }}</span>
+                    </div>
+                    <div class="emp-stats">
+                      <div class="emp-stat">
+                        <span class="emp-stat-num">{{ taskCountFor(emp.name) }}</span>
+                        <span class="emp-stat-lbl">Total</span>
+                      </div>
+                      <div class="emp-stat">
+                        <span class="emp-stat-num blue">{{ activeCountFor(emp.name) }}</span>
+                        <span class="emp-stat-lbl">Active</span>
+                      </div>
+                      <div class="emp-stat">
+                        <span class="emp-stat-num green">{{ completedCountFor(emp.name) }}</span>
+                        <span class="emp-stat-lbl">Done</span>
+                      </div>
+                    </div>
+                    <div class="emp-progress">
+                      <div class="emp-progress-track">
+                        <div class="emp-progress-fill" [style.width.%]="progressFor(emp.name)"
+                             [style.background]="avatarColor(emp.name)"></div>
+                      </div>
+                      <span class="emp-pct">{{ progressFor(emp.name) }}% done</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ════ SETTINGS ════ -->
+      @if (activeView === 'Settings') {
+        <div class="page">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">Settings</h1>
+              <p class="page-sub">Manage your account and preferences.</p>
+            </div>
+          </div>
+
+          <div class="settings-stack">
+            <div class="settings-card">
+              <h3 class="settings-section">Profile</h3>
+              <div class="settings-row">
+                <div class="settings-row-body">
+                  <span class="settings-row-name">Display Name</span>
+                  <span class="settings-row-hint">Your name shown across the dashboard</span>
+                </div>
+                <div class="user-chip sm">
+                  <div class="user-ava sm">{{ userName?.charAt(0)?.toUpperCase() }}</div>
+                  <span>{{ userName }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <h3 class="settings-section">Appearance</h3>
+              <div class="settings-row">
+                <div class="settings-row-body">
+                  <span class="settings-row-name">Dark Mode</span>
+                  <span class="settings-row-hint">Switch between light and dark theme</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="darkMode" />
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <h3 class="settings-section">Task Preferences</h3>
+              <div class="settings-row">
+                <div class="settings-row-body">
+                  <span class="settings-row-name">Default Task Status</span>
+                  <span class="settings-row-hint">Pre-selected status when adding a new task</span>
+                </div>
+                <select class="sel" [(ngModel)]="defaultTaskStatus">
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-body">
+                  <span class="settings-row-name">Default Sort</span>
+                  <span class="settings-row-hint">How tasks are sorted by default</span>
+                </div>
+                <select class="sel" [(ngModel)]="sortKey">
+                  <option value="priority">Priority</option>
+                  <option value="date">Due Date</option>
+                  <option value="title">Title</option>
+                  <option value="status">Status</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-card danger-zone">
+              <h3 class="settings-section danger">Danger Zone</h3>
+              <div class="settings-row">
+                <div class="settings-row-body">
+                  <span class="settings-row-name">Clear All Tasks</span>
+                  <span class="settings-row-hint">Permanently delete every task — cannot be undone</span>
+                </div>
+                <button class="btn-danger" (click)="clearAllTasks()">Clear All Tasks</button>
+              </div>
             </div>
           </div>
         </div>
       }
 
-      <footer class="footer">© 2025 Task Dashboard. All rights reserved.</footer>
-    </div>
+      <footer class="footer">© 2025 TeamTrack · Employee Task Management</footer>
+    </main>
   </div>
-</div>
 
-<!-- Add / Edit Modal -->
-@if (showModal) {
+  <!-- ══ TASK MODAL ══ -->
+  @if (showModal) {
   <div class="modal-overlay" (click)="showModal = false">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>{{ editingId !== null ? 'Edit Task' : 'Add Task' }}</h3>
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h2>{{ editingId !== null ? 'Edit Issue' : 'Create Issue' }}</h2>
         <button class="modal-close" (click)="showModal = false">✕</button>
       </div>
-      <input class="modal-input" type="text" placeholder="Task Title" [(ngModel)]="newTask.title" />
-      <textarea class="modal-textarea" placeholder="Description" [(ngModel)]="newTask.description"></textarea>
-      <select class="modal-select" [(ngModel)]="newTask.status">
-        <option value="Pending">Pending</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-      </select>
-      <button class="save-btn" (click)="saveTask()">Save Task</button>
+
+      <div class="modal-body">
+        <div class="form-field" [class.has-error]="titleError">
+          <label>Issue Title <span class="req">*</span></label>
+          <input type="text" placeholder="Short, descriptive summary…" [(ngModel)]="newTask.title" (input)="titleError = false" />
+          @if (titleError) { <span class="field-error">Title is required.</span> }
+        </div>
+
+        <div class="form-field">
+          <label>Description</label>
+          <textarea placeholder="Add more details…" [(ngModel)]="newTask.description"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label>Status</label>
+            <select [(ngModel)]="newTask.status">
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Priority</label>
+            <select [(ngModel)]="newTask.priority">
+              <option value="High">🔴 High</option>
+              <option value="Medium">🟠 Medium</option>
+              <option value="Low">⚪ Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label>Assign To</label>
+            <select [(ngModel)]="newTask.assignee">
+              <option value="">Unassigned</option>
+              @for (name of employeeNames; track name) {
+                <option [value]="name">{{ name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Due Date</label>
+            <input type="date" [(ngModel)]="newTask.date" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn-ghost" (click)="showModal = false">Cancel</button>
+        <button class="btn-primary" (click)="saveTask()">
+          {{ editingId !== null ? 'Save Changes' : 'Create Task' }}
+        </button>
+      </div>
     </div>
   </div>
-}
+  }
+
+  <!-- ══ EMPLOYEE MODAL ══ -->
+  @if (showEmpModal) {
+  <div class="modal-overlay" (click)="showEmpModal = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h2>Add Team Member</h2>
+        <button class="modal-close" (click)="showEmpModal = false">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" placeholder="e.g. Alice Johnson" [(ngModel)]="newEmployee.name" />
+        </div>
+        <div class="form-field">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" placeholder="e.g. alice@company.com" [(ngModel)]="newEmployee.email" />
+        </div>
+        <div class="form-field">
+          <label>Role</label>
+          <input type="text" placeholder="e.g. Developer" [(ngModel)]="newEmployee.role" />
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn-ghost" (click)="showEmpModal = false">Cancel</button>
+        <button class="btn-primary" (click)="saveEmployee()">Add Member</button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div><!-- /.app -->
