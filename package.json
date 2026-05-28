@@ -5,9 +5,9 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "deploy": "ng build && cp docs/index.csr.html docs/404.html && cp docs/index.csr.html docs/main/index.html",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "serve:ssr:Employee_task_management_dashboard": "node dist/Employee_task_management_dashboard/server/server.mjs"
+    "test": "ng test"
   },
   "prettier": {
     "printWidth": 100,
